@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>CoursePilot · Cornell semester planner</title>
+    <meta
+      name="description"
+      content="Plan a Cornell semester with actual roster data and explore section replacements."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%231a5748'/%3E%3Cpath d='M8 22L16 7l8 15-8-4z' fill='white'/%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <aside>
+      <a class="brand" href="./"><b class="logo">↗</b> CoursePilot</a>
+      <div class="school">
+        CORNELL UNIVERSITY<br /><strong>Engineering · Computer Science</strong>
+      </div>
+      <nav>
+        <button class="nav active" data-view="planner">
+          ▦ &nbsp; Semester planner</button
+        ><button class="nav" data-view="roadmap">
+          ◷ &nbsp; Project roadmap
+        </button>
+      </nav>
+      <div class="sidebar-bottom">
+        Fall 2026<small>Semester planning</small>
+      </div>
+    </aside>
+    <main>
+      <header>
+        <span>WORKSPACE / <b id="crumb">SEMESTER PLANNER</b></span
+        ><span class="pill">Cornell roster connected</span>
+      </header>
+      <section id="planner">
+        <div class="heading">
+          <div>
+            <div class="eyebrow">FALL 2026 · CORNELL UNIVERSITY</div>
+            <h1>Your semester, in balance.</h1>
+            <p>
+              Real sections. Clear tradeoffs. A backup when registration
+              changes.
+            </p>
+          </div>
+          <button id="reset" class="secondary">Reset demo</button>
+        </div>
+        <div class="notice">
+          <b id="data-source">Loading Cornell snapshot…</b>
+          <p>
+            Availability is a timestamped observation, not a seat guarantee.
+            Closure events are simulated. Prerequisites, corequisites, and
+            enrollment eligibility require your review.
+          </p>
+          <button id="refresh" class="secondary">Refresh Cornell data</button>
+        </div>
+        <div class="workspace">
+          <div class="left">
+            <section class="card">
+              <h2>Your goals</h2>
+              <p>Select one to four courses.</p>
+              <div id="course-picker"></div>
+              <div class="fields">
+                <label
+                  >Min credits<input
+                    id="min"
+                    type="number"
+                    value="16"
+                    min="1"
+                    max="24" /></label
+                ><label
+                  >Max credits<input
+                    id="max"
+                    type="number"
+                    value="16"
+                    min="1"
+                    max="24"
+                /></label>
+              </div>
+              <label class="check"
+                ><input id="early" type="checkbox" checked /> Prefer classes
+                after 10 AM</label
+              ><label class="check"
+                ><input id="friday" type="checkbox" checked /> Prefer Friday
+                afternoon free</label
+              ><button id="generate" class="primary full" disabled>
+                Generate schedules →
+              </button>
+              <details class="text-goals">
+                <summary>Enter goals as text</summary>
+                <label for="goal">Include every course you want</label
+                ><textarea id="goal">
+16 credits with CS 3110, CS 2800, MATH 2940 and ECON 3040. No classes before 10 AM and Friday afternoon free.</textarea
+                ><button id="apply-text" class="secondary">
+                  Apply text to controls
+                </button>
+                <p class="micro">
+                  Include course codes, a credit range, and morning or Friday
+                  preferences. Review the updated controls before generating.
+                </p>
+              </details>
+            </section>
+          </div>
+          <div class="center">
+            <section class="card schedule">
+              <div class="schedule-head">
+                <div>
+                  <h2>Your weekly schedule</h2>
+                  <p>Fall 2026 · Eastern time</p>
+                </div>
+                <span id="status" class="pill">Loading</span>
+              </div>
+              <div class="stats">
+                <div><b id="credits">—</b><small>credits</small></div>
+                <div><b id="course-count">—</b><small>courses</small></div>
+                <div><b id="conflicts">—</b><small>time conflicts</small></div>
+                <div><b id="score">—</b><small>preference misses</small></div>
+              </div>
+              <p id="tradeoffs"></p>
+              <div class="plan-tabs" id="tabs"></div>
+              <div class="calendar-scroll">
+                <div id="calendar" class="calendar"></div>
+              </div>
+              <h3>Sections & academic requirements</h3>
+              <p>
+                Expand each course to review prerequisites, corequisites, and
+                source details.
+              </p>
+              <div id="courses" class="courses"></div>
+              <div id="diff"></div>
+              <div id="result" role="status" aria-live="polite"></div>
+              <label class="check review-check"
+                ><input type="checkbox" id="review" /> I have reviewed the
+                academic requirements and enrollment restrictions. Approval
+                saves a planning choice, not enrollment.</label
+              >
+              <div class="actions">
+                <span id="validation"></span
+                ><button id="approve" class="primary" disabled>
+                  Approve plan
+                </button>
+              </div>
+            </section>
+            <section id="approved-record" class="card" hidden>
+              <h2 id="approved-state"></h2>
+              <p id="approved-list"></p>
+              <p>
+                Retained until a replacement is approved. This record is cleared
+                on page reload.
+              </p>
+            </section>
+            <section class="replan">
+              <div>
+                <h2>Try a registration change</h2>
+                <p>
+                  Choose a section in your approved plan. Its closure is a local
+                  simulation; Cornell is never modified.
+                </p>
+                <label for="closure-section">Section to close</label
+                ><select id="closure-section"></select>
+              </div>
+              <button id="simulate" class="secondary" disabled>
+                Simulate section full →
+              </button>
+            </section>
+          </div>
+          <div class="right">
+            <section class="card activity">
+              <div class="card-title"><h2>Pilot activity</h2></div>
+              <p class="micro">Actual planner actions · No LLM connected</p>
+              <div id="feed" aria-live="polite"></div>
+              <div class="agent-note">
+                You’re in control.<br /><span
+                  >Every replacement needs approval. CoursePilot never enrolls
+                  you.</span
+                >
+              </div>
+            </section>
+          </div>
+        </div>
+      </section>
+      <section id="roadmap" hidden>
+        <div class="heading roadmap-heading">
+          <div class="eyebrow">COURSEPILOT · 3-WEEK ROADMAP</div>
+          <h1>From semester planner to AI counselor.</h1>
+          <p>
+            Three focused weeks from today’s scheduling demo to a conversational
+            agent that understands a student, recommends courses with reasons,
+            and turns advice into an approvable plan.
+          </p>
+          <span class="pill"
+            >Final product · AI agent counselor · Cornell Engineering CS</span
+          >
+        </div>
+        <div class="roadmap-grid">
+          <article class="card">
+            <span class="eyebrow">WEEK 01 · FOUNDATION</span>
+            <h2>Know the student and the rules</h2>
+            <h3>Build the academic ground truth the agent will trust.</h3>
+            <p>
+              Model a narrow, sourced slice of Cornell Engineering CS
+              requirements and connect it to a simple student profile.
+            </p>
+            <ul>
+              <li>Catalog-year student profile (completed courses, goals, interests)</li>
+              <li>Verified prerequisite and degree-rule snippets with sources</li>
+              <li>“Where do I stand?” progress view with missing-data flags</li>
+            </ul>
+            <div class="milestone">
+              <b>End of week</b>
+              <p>
+                Deterministically explain completed vs. remaining requirements
+                for one program, with sources and open questions.
+              </p>
+            </div>
+          </article>
+          <article class="card">
+            <span class="eyebrow">WEEK 02 · AGENT</span>
+            <h2>Ship the conversational counselor</h2>
+            <h3>Give advice with reasons—not just search results.</h3>
+            <p>
+              Build a tool-calling agent that clarifies goals, consults Week 1
+              tools and roster data, and compares options before recommending.
+            </p>
+            <ul>
+              <li>Clarify → consult → compare → explain conversation loop</li>
+              <li>Bounded tool calls with transparent action summaries</li>
+              <li>Source-backed “What should I take next, and why?” answers</li>
+            </ul>
+            <div class="milestone">
+              <b>End of week</b>
+              <p>
+                A working counselor chat that produces a supported next-semester
+                recommendation for a demo student profile.
+              </p>
+            </div>
+          </article>
+          <article class="card">
+            <span class="eyebrow">WEEK 03 · PRODUCT</span>
+            <h2>Counselor meets the planner</h2>
+            <h3>Turn a decision into an approvable semester.</h3>
+            <p>
+              Wire the existing schedule engine as an agent tool so advice
+              becomes a reviewable calendar, alternatives, and student approval.
+            </p>
+            <ul>
+              <li>Conversation → validated section plan → calendar handoff</li>
+              <li>Reuse backup comparison and closure replanning as tools</li>
+              <li>Eval suite, uncertainty surfacing, and advisor-escalation stubs</li>
+            </ul>
+            <div class="milestone">
+              <b>Final product</b>
+              <p>
+                End-to-end AI agent counselor: chat, recommend, schedule, and
+                approve—for one program and one semester.
+              </p>
+            </div>
+          </article>
+        </div>
+        <section class="card scope counselor-mvp">
+          <span class="eyebrow">WEEK 3 FINAL PRODUCT</span>
+          <h2>AI agent counselor — four questions, answered well.</h2>
+          <div class="mvp-questions">
+            <div>
+              <h3>Where do I stand?</h3>
+              <p>Summarize completed courses and remaining requirements.</p>
+            </div>
+            <div>
+              <h3>What should I take next?</h3>
+              <p>
+                Recommend courses using requirements, interests, and
+                prerequisites.
+              </p>
+            </div>
+            <div>
+              <h3>Why this option?</h3>
+              <p>
+                Explain benefits, tradeoffs, and supporting official sources.
+              </p>
+            </div>
+            <div>
+              <h3>What if something changes?</h3>
+              <p>Reassess the plan and propose alternatives for review.</p>
+            </div>
+          </div>
+          <p>
+            <b>Success looks like:</b> a student can open a conversation, get a
+            sourced recommendation, generate a conflict-free schedule, and
+            approve a plan—without claiming graduation certification or
+            enrollment authority. Scope stays one program, one semester.
+          </p>
+        </section>
+        <section class="card scope">
+          <h2>How the agent works</h2>
+          <p class="agent-flow">
+            Understand → Clarify → Consult sources & tools → Compare → Validate
+            → Explain → Request approval → Remember
+          </p>
+          <p>
+            The interface centers on a counseling conversation beside an
+            academic profile and recommendation panel. The calendar appears when
+            the student is ready to lock in a semester.
+          </p>
+          <h2>Clear boundaries, useful handoffs.</h2>
+          <ul>
+            <li>
+              Deterministic tools check schedule feasibility and explicitly
+              modeled academic rules.
+            </li>
+            <li>
+              The AI explains and coordinates; it does not invent requirements
+              or certify graduation eligibility.
+            </li>
+            <li>
+              Exceptions, transfer-credit decisions, and unclear policies go to
+              a human advisor.
+            </li>
+            <li>
+              After week 3: durable accounts, multi-semester paths, and a
+              broader student pilot—not required for the first counselor ship.
+            </li>
+          </ul>
+          <a href="roadmap.md" download
+            >Download the complete counselor roadmap ↗</a
+          >
+        </section>
+      </section>
+      <footer>COURSEPILOT <span>Real course data · Planning demo</span></footer>
+    </main>
+    <script src="planner.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
